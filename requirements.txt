@@ -1,0 +1,4 @@
+pillow~=10.4.0
+numpy~=2.0.2
+matplotlib~=3.9.4
+pytorch~=2.5.1

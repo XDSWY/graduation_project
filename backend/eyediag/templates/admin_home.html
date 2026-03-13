@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}管理员主页 - 眼底病筛查{% endblock %}
+
+{% block content %}
+<style>
+    /* 复用home.html的样式 */
+    .hero-section {
+        text-align: center;
+        padding: 60px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        color: white;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .hero-section h1 {
+        font-size: 3em;
+        margin-bottom: 20px;
+        animation: fadeInDown 1s;
+    }
+
+    .hero-section p {
+        font-size: 1.2em;
+        opacity: 0.9;
+        animation: fadeInUp 1s;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        padding: 20px;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .feature-icon {
+        font-size: 3.5em;
+        margin-bottom: 20px;
+        display: inline-block;
+        animation: bounce 2s infinite;
+    }
+
+    .feature-card h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+    }
+
+    .feature-card p {
+        color: #666;
+        line-height: 1.6;
+    }
+
+    /* 管理员专属按钮样式 */
+    .admin-section {
+        margin-top: 40px;
+        padding: 20px;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .admin-section h2 {
+        color: white;
+        margin-bottom: 20px;
+        font-size: 2em;
+    }
+
+    .admin-button {
+        display: inline-block;
+        padding: 15px 40px;
+        background: white;
+        color: #ff6b6b;
+        text-decoration: none;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 1.2em;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .admin-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        color: #ee5a24;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+</style>
+
+<div class="container mt-5">
+    <!-- 欢迎横幅 -->
+    <div class="hero-section">
+        <h1>👋 欢迎回来，{{ user.username }}（管理员）</h1>
+        <p>使用眼底病筛查系统，快速、准确地诊断眼底疾病</p>
+    </div>
+
+    <!-- 功能卡片网格（与home.html相同） -->
+    <div class="features-grid">
+        <a href="{% url 'upload' %}" class="feature-card">
+            <div class="feature-icon">📸</div>
+            <h3>上传照片</h3>
+            <p>上传眼底照片进行AI智能诊断，快速获取分析结果</p>
+        </a>
+
+        <a href="{% url 'batch_upload' %}" class="feature-card">
+            <div class="feature-icon">📁</div>
+            <h3>批量上传</h3>
+            <p>同时上传多张照片，批量处理，提高诊断效率</p>
+        </a>
+
+        <a href="{% url 'favorites' %}" class="feature-card">
+            <div class="feature-icon">⭐</div>
+            <h3>我的收藏</h3>
+            <p>查看和管理你收藏的重要诊断记录</p>
+        </a>
+    </div>
+
+    <!-- 管理员专属区域 -->
+    <div class="admin-section">
+        <h2>⚡ 管理员功能</h2>
+        <a href="{% url 'manage_users' %}" class="admin-button">
+            👥 管理用户账户
+        </a>
+    </div>
+
+    <!-- 最近诊断记录预览 -->
+    <div class="recent-section mt-5">
+        <h3 class="mb-4">最近诊断记录</h3>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>诊断结果</th>
+                        <th>置信度</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in user.records.all|slice:":5" %}
+                    <tr>
+                        <td>{{ record.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ record.result }}</td>
+                        <td>{{ record.confidence|floatformat:2 }}%</td>
+                        <td>
+                            <a href="{% url 'result' record.pk %}" class="btn btn-sm btn-info">查看</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">暂无诊断记录</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

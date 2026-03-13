@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}眼底病筛查{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 添加图标库 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- 添加自定义样式 -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary"> <!-- navbar: Bootstrap基础导航栏类 ,navbar-expand-lg: 在大型屏幕上展开显示，小于这个尺寸时折叠显示, navbar-dark: 设置导航文字为浅色(适合深色背景), bg-primary: Bootstrap主题色背景，这里显示为蓝色(#0d6efd)-->
+        <div class="container">
+          <a class="navbar-brand" href="{% url 'index' %}">🏥 眼底病筛查系统</a>  <!-- <a>是链接标签， {% url 'index' %}: 根据URL名称'index'生成实际URL-->
+            <div class="navbar-nav ms-auto">   <!-- navbar-nav: Bootstrap导航项容器，提供导航链接的布局样式， ms-auto: Bootstrap工具类，将元素推到容器右侧(相当于右对齐)-->
+                {% if user.is_authenticated %}   <!--判断用户是否已登录 -->
+                    <!-- 添加管理员专属链接 -->
+                    {% if user.username == 'admin' %}
+                    <a class="nav-link" href="{% url 'admin_home' %}">管理员主页</a>
+                    <a class="nav-link" href="{% url 'manage_users' %}">管理用户</a>
+                    {% endif %}
+                    <span class="nav-item nav-link text-white">你好，{{ user.username }}</span>
+                    <a class="nav-link" href="{% url 'logout' %}">退出</a>
+                {% else %}
+                    <a class="nav-link" href="{% url 'login' %}">登录</a>
+                    <a class="nav-link" href="{% url 'register' %}">注册</a>
+                {% endif %}  <!--结束if判断 -->
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">  <!--: Bootstrap间距工具类,控制上边距大小 -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>  <!--alert-{{ message.tags }}: 动态添加消息级别对应的样式类-->
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

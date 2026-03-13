@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}首页 - 眼底病筛查{% endblock %}
+
+{% block content %}
+<style>
+    /* 全局背景 - 高级渐变色 */
+    body {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* 覆盖base.html的容器样式 */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* 主卡片容器 - 居中 */
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+
+    /* 登录/注册卡片 - 毛玻璃效果 */
+    .auth-card {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 30px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 480px;
+        padding: 50px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.5s;
+        pointer-events: none;
+    }
+
+    .auth-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 40px 70px rgba(0, 0, 0, 0.3);
+    }
+
+    .auth-card:hover::before {
+        opacity: 1;
+    }
+
+    /* 标题样式 */
+    .auth-title {
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .auth-title h1 {
+        font-size: 2.2em;
+        font-weight: 700;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        margin-bottom: 10px;
+        line-height: 1.3;
+    }
+
+    .auth-title h1 span {
+        display: inline-block;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    /* 表单样式 */
+    .auth-form {
+        margin-top: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+        position: relative;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: white;
+        font-weight: 500;
+        font-size: 0.95em;
+        letter-spacing: 0.5px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        color: rgba(255,255,255,0.7);
+        font-size: 1.2em;
+        z-index: 1;
+        transition: all 0.3s;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 15px 15px 15px 45px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        font-size: 1em;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        backdrop-filter: blur(5px);
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: white;
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        transform: scale(1.02);
+    }
+
+    .form-control:focus + .input-icon {
+        color: white;
+        transform: scale(1.2);
+    }
+
+    /* 密码可见性切换 */
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        font-size: 1.2em;
+        transition: all 0.3s;
+        z-index: 2;
+    }
+
+    .password-toggle:hover {
+        color: white;
+        transform: scale(1.2);
+    }
+
+    /* 登录按钮 - 渐变效果 */
+    .btn-login {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #45B7D1, #96C93D);
+        background-size: 300% 300%;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        font-size: 1.2em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        margin-top: 20px;
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-login:hover {
+        background-position: 100% 0;
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    }
+
+    .btn-login:hover::before {
+        left: 100%;
+    }
+
+    .btn-login:active {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    /* 注册链接 - 新潮设计 */
+    .auth-footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .auth-footer p {
+        color: rgba(255,255,255,0.9);
+        margin: 0 0 15px 0;
+        font-size: 0.95em;
+    }
+
+    .register-link {
+        display: inline-block;
+        padding: 12px 30px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid white;
+        border-radius: 50px;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.4s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .register-link::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.5s, height 0.5s;
+    }
+
+    .register-link:hover {
+        background: white;
+        color: #333;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .register-link:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .register-link span {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 3D 粒子效果 */
+    .particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .particle {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 50%;
+        animation: particleFloat 10s infinite linear;
+    }
+
+    @keyframes particleFloat {
+        0% {
+            transform: translateY(100vh) translateX(-10px);
+            opacity: 0;
+        }
+        10% { opacity: 0.8; }
+        90% { opacity: 0.8; }
+        100% {
+            transform: translateY(-100px) translateX(100vw);
+            opacity: 0;
+        }
+    }
+
+    /* 动态统计数字 */
+    .stats-container {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 30px;
+        padding: 20px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(5px);
+    }
+
+    .stat-item {
+        text-align: center;
+        color: white;
+    }
+
+    .stat-number {
+        font-size: 2em;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fff, #ffd700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: countUp 2s ease-out;
+    }
+
+    .stat-label {
+        font-size: 0.9em;
+        opacity: 0.8;
+        margin-top: 5px;
+    }
+
+    @keyframes countUp {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    /* 消息提示 */
+    .alert {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 0.95em;
+        backdrop-filter: blur(5px);
+    }
+
+    .alert-error {
+        background: rgba(255, 99, 99, 0.3);
+        color: white;
+        border: 1px solid rgba(255, 99, 99, 0.5);
+    }
+
+    .alert-success {
+        background: rgba(75, 181, 67, 0.3);
+        color: white;
+        border: 1px solid rgba(75, 181, 67, 0.5);
+    }
+</style>
+
+<!-- 粒子背景 -->
+<div class="particles" id="particles"></div>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- 标题 - 已按要求修改 -->
+        <div class="auth-title">
+            <h1>
+                <span>🏥</span>
+                <span>眼</span>
+                <span>底</span>
+                <span>图</span>
+                <span>像</span>
+                <span>糖</span>
+                <span>网</span>
+                <span>病</span>
+                <span>自</span>
+                <span>动</span>
+                <span>筛</span>
+                <span>查</span>
+                <span>系</span>
+                <span>统</span>
+            </h1>
+        </div>
+
+        <!-- 显示消息 -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- 登录表单 -->
+        <form method="post" action="{% url 'login' %}" class="auth-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">👤 用户名</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">👤</span>
+                    <input type="text" class="form-control" id="username" name="username"
+                           required placeholder="请输入用户名" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔒 密码</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" class="form-control" id="password" name="password"
+                           required placeholder="请输入密码">
+                    <span class="password-toggle" onclick="togglePassword()">👁️</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">登 录</button>
+        </form>
+
+        <!-- 注册链接 - 新潮设计 -->
+        <div class="auth-footer">
+            <p>新用户？</p>
+            <a href="{% url 'register' %}" class="register-link">
+                <span>✨ 立即注册体验 ✨</span>
+            </a>
+        </div>
+
+        <!-- 动态统计数字 - 新奇功能 -->
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number" id="stat1">1,234</div>
+                <div class="stat-label">今日诊断</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="stat2">89%</div>
+                <div class="stat-label">准确率</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="stat3">5.2s</div>
+                <div class="stat-label">平均耗时</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 密码可见性切换
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+}
+
+// 粒子效果
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 10 + 's';
+        particle.style.width = Math.random() * 5 + 5 + 'px';
+        particle.style.height = particle.style.width;
+        particlesContainer.appendChild(particle);
+    }
+}
+
+// 数字滚动效果
+function animateNumbers() {
+    const stats = [
+        { element: document.getElementById('stat1'), target: 1234, current: 0 },
+        { element: document.getElementById('stat2'), target: 89, current: 0, suffix: '%' },
+        { element: document.getElementById('stat3'), target: 5.2, current: 0, suffix: 's' }
+    ];
+
+    function updateNumbers() {
+        stats.forEach(stat => {
+            if (stat.current < stat.target) {
+                stat.current += stat.target / 50;
+                if (stat.current > stat.target) stat.current = stat.target;
+                if (Number.isInteger(stat.target)) {
+                    stat.element.textContent = Math.floor(stat.current) + (stat.suffix || '');
+                } else {
+                    stat.element.textContent = stat.current.toFixed(1) + (stat.suffix || '');
+                }
+            }
+        });
+
+        if (stats.some(s => s.current < s.target)) {
+            requestAnimationFrame(updateNumbers);
+        }
+    }
+
+    setTimeout(updateNumbers, 500);
+}
+
+// 初始化
+window.onload = function() {
+    createParticles();
+    animateNumbers();
+};
+
+// 输入框光效
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+    });
+    input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}我的收藏 - 眼底病筛查{% endblock %}
+
+{% block content %}
+<style>
+    .favorites-container {
+        padding: 30px 0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .page-header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .favorites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+
+    .favorite-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .favorite-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .favorite-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        cursor: pointer;
+    }
+
+    .favorite-info {
+        padding: 20px;
+    }
+
+    .favorite-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .favorite-result {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .favorite-badge {
+        background: #FFD700;
+        color: #333;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8em;
+    }
+
+    .favorite-confidence {
+        color: #28a745;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .favorite-time {
+        color: #999;
+        font-size: 0.9em;
+        margin-bottom: 15px;
+    }
+
+    .favorite-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-view {
+        flex: 1;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 8px;
+        border-radius: 8px;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .btn-view:hover {
+        background: #5a67d8;
+        color: white;
+    }
+
+    .btn-unfavorite {
+        background: #ff6b6b;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-unfavorite:hover {
+        background: #ee5a24;
+    }
+
+    .empty-favorites {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .empty-icon {
+        font-size: 5em;
+        color: #FFD700;
+        margin-bottom: 20px;
+    }
+
+    .empty-text {
+        color: #666;
+        font-size: 1.2em;
+        margin-bottom: 20px;
+    }
+
+    .btn-browse {
+        display: inline-block;
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        transition: all 0.3s;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 图片预览模态框 */
+    .modal-image {
+        max-width: 100%;
+        max-height: 80vh;
+    }
+</style>
+
+<div class="favorites-container">
+    <div class="page-header">
+        <h1>⭐ 我的收藏</h1>
+        <p>共 {{ records|length }} 个收藏项</p>
+    </div>
+
+    {% if records %}
+    <div class="favorites-grid">
+        {% for record in records %}
+        <div class="favorite-card">
+            <img src="{{ record.image.url }}" class="favorite-image" alt="眼底照片" onclick="showImageModal('{{ record.image.url }}')">
+            <div class="favorite-info">
+                <div class="favorite-header">
+                    <span class="favorite-result">{{ record.result|default:"待诊断" }}</span>
+                    <span class="favorite-badge">⭐ 收藏</span>
+                </div>
+                <div class="favorite-confidence">
+                    置信度: {{ record.confidence|floatformat:2 }}%
+                </div>
+                <div class="favorite-time">
+                    {{ record.created_at|date:"Y-m-d H:i" }}
+                </div>
+                <div class="favorite-actions">
+                    <a href="{% url 'result' record.pk %}" class="btn-view">查看详情</a>
+                    <form method="post" action="{% url 'toggle_favorite' record.pk %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-unfavorite" title="取消收藏">
+                            <i class="bi bi-star-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-favorites">
+        <div class="empty-icon">⭐</div>
+        <h3>暂无收藏</h3>
+        <p class="empty-text">你还没有收藏任何诊断记录</p>
+        <a href="{% url 'history' %}" class="btn-browse">
+            <i class="bi bi-clock-history"></i> 浏览历史记录
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 图片预览模态框 -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-0">
+                <img src="" class="modal-image" id="modalImage" alt="预览">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showImageModal(imageUrl) {
+    document.getElementById('modalImage').src = imageUrl;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+</script>
+{% endblock %}

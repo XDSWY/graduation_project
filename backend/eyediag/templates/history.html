@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+
+{% block title %}历史记录 - 眼底病筛查{% endblock %}
+
+{% block content %}
+<style>
+    .history-container {
+        padding: 30px 0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .page-header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .filter-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        border-bottom: 2px solid #667eea;
+        color: #333;
+        font-weight: 600;
+        padding: 15px 10px;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        padding: 15px 10px;
+        vertical-align: middle;
+        border-bottom: 1px solid #eee;
+    }
+
+    .thumbnail-img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+
+    .thumbnail-img:hover {
+        transform: scale(2);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        z-index: 10;
+        position: relative;
+    }
+
+    .result-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .result-normal {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .result-abnormal {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .result-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .confidence-bar {
+        width: 80px;
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        border-radius: 3px;
+    }
+
+    .btn-action {
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.9em;
+        margin: 0 2px;
+        display: inline-block;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .btn-view {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #5a67d8;
+        color: white;
+    }
+
+    .btn-favorite {
+        background: #FFD700;
+        color: #333;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-favorite:hover {
+        background: #FFC107;
+    }
+
+    .btn-favorite.active {
+        background: #FFA500;
+        color: white;
+    }
+
+    .btn-delete {
+        background: #ff6b6b;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-delete:hover {
+        background: #ee5a24;
+    }
+
+    .pagination {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .page-link {
+        padding: 8px 15px;
+        border: 1px solid #dee2e6;
+        color: #667eea;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+
+    .page-link:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .page-link.active {
+        background: #667eea;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-icon {
+        font-size: 5em;
+        color: #ccc;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="history-container">
+    <div class="page-header">
+        <h1>📋 诊断历史记录</h1>
+        <p>共 {{ records|length }} 条诊断记录</p>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchInput" placeholder="🔍 搜索诊断结果...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-control" id="resultFilter">
+                    <option value="">全部结果</option>
+                    <option value="正常">正常</option>
+                    <option value="异常">异常</option>
+                    <option value="待诊断">待诊断</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-control" id="dateFilter">
+                    <option value="all">全部时间</option>
+                    <option value="today">今天</option>
+                    <option value="week">本周</option>
+                    <option value="month">本月</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="resetFilters()">重置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 记录列表 -->
+    <div class="table-container">
+        <table class="table" id="recordsTable">
+            <thead>
+                <tr>
+                    <th>缩略图</th>
+                    <th>诊断时间</th>
+                    <th>诊断结果</th>
+                    <th>置信度</th>
+                    <th>收藏</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr class="record-row" data-result="{{ record.result|default:'待诊断' }}">
+                    <td>
+                        <img src="{{ record.image.url }}" class="thumbnail-img" alt="眼底照片" 
+                             onclick="showImageModal('{{ record.image.url }}')">
+                    </td>
+                    <td>{{ record.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span class="result-badge 
+                            {% if record.result == '正常' %}result-normal
+                            {% elif record.result == '异常' %}result-abnormal
+                            {% else %}result-pending{% endif %}">
+                            {{ record.result|default:"待诊断" }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if record.confidence %}
+                        <div>{{ record.confidence|floatformat:1 }}%</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: {{ record.confidence }}%"></div>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">--</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'toggle_favorite' record.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-favorite {% if record.is_favorite %}active{% endif %}" 
+                                    title="{% if record.is_favorite %}取消收藏{% else %}添加收藏{% endif %}">
+                                <i class="bi bi-star{% if record.is_favorite %}-fill{% endif %}"></i>
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="{% url 'result' record.pk %}" class="btn-action btn-view" title="查看详情">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <form method="post" action="{% url 'delete_user' record.pk %}" style="display: inline;" 
+                              onsubmit="return confirm('确定要删除这条记录吗？');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-action btn-delete" title="删除">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <h3>暂无诊断记录</h3>
+                            <p class="text-muted">快去上传你的第一张眼底照片吧！</p>
+                            <a href="{% url 'upload' %}" class="btn btn-primary">
+                                <i class="bi bi-camera"></i> 立即上传
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    {% if records.has_other_pages %}
+    <div class="pagination">
+        {% if records.has_previous %}
+        <a href="?page={{ records.previous_page_number }}" class="page-link">&laquo;</a>
+        {% endif %}
+        
+        {% for i in records.paginator.page_range %}
+            {% if records.number == i %}
+            <span class="page-link active">{{ i }}</span>
+            {% else %}
+            <a href="?page={{ i }}" class="page-link">{{ i }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if records.has_next %}
+        <a href="?page={{ records.next_page_number }}" class="page-link">&raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- 图片预览模态框 -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-0">
+                <img src="" class="img-fluid" id="modalImage" alt="预览">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 搜索功能
+document.getElementById('searchInput').addEventListener('keyup', filterRecords);
+document.getElementById('resultFilter').addEventListener('change', filterRecords);
+document.getElementById('dateFilter').addEventListener('change', filterRecords);
+
+function filterRecords() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const resultFilter = document.getElementById('resultFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+    
+    const rows = document.querySelectorAll('.record-row');
+    const now = new Date();
+    
+    rows.forEach(row => {
+        let show = true;
+        
+        // 搜索结果
+        const result = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        if (searchText && !result.includes(searchText)) {
+            show = false;
+        }
+        
+        // 结果筛选
+        if (resultFilter && !result.includes(resultFilter.toLowerCase())) {
+            show = false;
+        }
+        
+        // 时间筛选
+        if (dateFilter !== 'all') {
+            const dateText = row.querySelector('td:nth-child(2)').textContent;
+            const recordDate = new Date(dateText);
+            
+            if (dateFilter === 'today') {
+                if (recordDate.toDateString() !== now.toDateString()) show = false;
+            } else if (dateFilter === 'week') {
+                const weekAgo = new Date(now.setDate(now.getDate() - 7));
+                if (recordDate < weekAgo) show = false;
+            } else if (dateFilter === 'month') {
+                const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+                if (recordDate < monthAgo) show = false;
+            }
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('resultFilter').value = '';
+    document.getElementById('dateFilter').value = 'all';
+    filterRecords();
+}
+
+function showImageModal(imageUrl) {
+    document.getElementById('modalImage').src = imageUrl;
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+</script>
+{% endblock %}

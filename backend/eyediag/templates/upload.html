@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}上传照片 - 眼底病筛查{% endblock %}
+
+{% block content %}
+<style>
+    .upload-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .upload-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .upload-header h2 {
+        color: #333;
+        font-size: 2em;
+        margin-bottom: 10px;
+    }
+
+    .upload-header p {
+        color: #666;
+    }
+
+    .upload-area {
+        border: 3px dashed #667eea;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+
+    .upload-area:hover {
+        border-color: #764ba2;
+        background: #f0f3ff;
+    }
+
+    .upload-area i {
+        font-size: 4em;
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+
+    .upload-area p {
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .preview-container {
+        margin-top: 20px;
+        display: none;
+        text-align: center;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn-upload {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .btn-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-upload:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .loading {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="upload-container">
+    <div class="upload-header">
+        <h2>📸 上传眼底照片</h2>
+        <p>支持 JPG、PNG 格式，单张不超过10MB</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
+        
+        <!-- 上传区域 -->
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <i class="bi bi-cloud-upload"></i>
+            <p>点击此处或拖拽图片到此处</p>
+            <p class="text-muted small">点击选择图片</p>
+            <input type="file" id="fileInput" name="image" class="file-input" accept="image/*" required onchange="previewImage(this)">
+        </div>
+
+        <!-- 图片预览 -->
+        <div class="preview-container" id="previewContainer">
+            <img class="preview-image" id="previewImage" src="" alt="预览">
+            <button type="submit" class="btn-upload" id="submitBtn">
+                <i class="bi bi-arrow-right-circle"></i> 开始诊断
+            </button>
+        </div>
+
+        <!-- 加载动画 -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在分析图片，请稍候...</p>
+        </div>
+    </form>
+</div>
+
+<script>
+function previewImage(input) {
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const file = input.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'block';
+        }
+        
+        reader.readAsDataURL(file);
+    }
+}
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('submitBtn').disabled = true;
+});
+</script>
+{% endblock %}
