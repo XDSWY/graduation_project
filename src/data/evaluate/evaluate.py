@@ -7,13 +7,13 @@ from torch.utils.data import DataLoader
 from transformers import ViTForImageClassification
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
-from config import config, device
-from dataset import FundusDataset
+from src.data.config import config, device
+from src.data.dataset import FundusDataset
 
 
 # ========== 数据路径 ==========
-val_dir = r'C:\Users\lenovo\Desktop\graduation_project\data\new\Validation Images'
-excel_dir = r'C:\Users\lenovo\Desktop\graduation_project\data\raw\ODIR-5K\data.xlsx'
+val_dir = r'/data/new/validation images'
+excel_dir = r'/data/raw/ODIR-5K/data.xlsx'
 
 # 测试集
 val_dataset = FundusDataset(val_dir, excel_dir, is_training=False)
@@ -172,7 +172,7 @@ def evaluate_model(model, test_loader):
 
 # ========== 主函数 ==========
 if __name__ == '__main__':
-    model_path = r'C:\Users\lenovo\Desktop\graduation_project\checkpoints\best_model_by_val_f1.pth'
+    model_path = r'/checkpoints/best_model_by_val_f1.pth'
 
     if not os.path.exists(model_path):
         candidates = [

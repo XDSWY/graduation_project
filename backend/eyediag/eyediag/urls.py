@@ -14,27 +14,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
-from diagnosis import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.index, name='index'),           # 首页（登录页面）
-    path('home/', views.home, name='home'),
-    path('admin-home/', views.admin_home, name='admin_home'),
-    path('manage-users/', views.manage_users, name='manage_users'),
-    path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
-    path('register/', views.register_view, name='register'),
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
-
-    # 添加缺失的功能URL
-    path('upload/', views.upload, name='upload'),
-    path('batch-upload/', views.batch_upload, name='batch_upload'),
-    path('favorites/', views.favorites, name='favorites'),
-    path('history/', views.history, name='history'),
-    path('statistics/', views.statistics, name='statistics'),
-    path('result/<int:pk>/', views.result, name='result'),
-    path('toggle-favorite/<int:pk>/', views.toggle_favorite, name='toggle_favorite'),
+    path("admin/", admin.site.urls),
 ]

@@ -23,15 +23,15 @@ print("--------------------------------------------------")
 print("--------------------------------------------------")
 
 # 1. 查看新Training Images有多少张
-train_new_count = len(os.listdir(r"C:\Users\lenovo\Desktop\graduation_project\data\new\Training Images"))
+train_new_count = len(os.listdir(r"C:\Users\lenovo\Desktop\graduation_project\data\latest\Training Images"))
 print(f"Training Images: {train_new_count} 张")
 
 # 2. 查看新Testing Images有多少张
-test_new_count = len(os.listdir(r"C:\Users\lenovo\Desktop\graduation_project\data\new\Testing Images"))
+test_new_count = len(os.listdir(r"C:\Users\lenovo\Desktop\graduation_project\data\latest\Testing Images"))
 print(f"Testing: {test_new_count} 张")
 
 # 2. 查看新validation Images有多少张
-valid_new_count = len(os.listdir(r"C:\Users\lenovo\Desktop\graduation_project\data\new\Validation Images"))
+valid_new_count = len(os.listdir(r"C:\Users\lenovo\Desktop\graduation_project\data\latest\validation images"))
 print(f"validation: {valid_new_count} 张")
 
 
