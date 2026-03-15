@@ -15,8 +15,9 @@ from torch.multiprocessing import freeze_support
 
 from src.data.config import config, device
 from src.data.dataset import FundusDataset
-from src.data.class_balance import calculate_multilabel_weights, create_multilabel_balanced_sampler, WeightedBCEWithLogitsLoss
-
+from src.data.class_balance import calculate_multilabel_weights, create_multilabel_balanced_sampler, \
+    WeightedBCEWithLogitsLoss
+from src.data.focal_loss import FocalLoss  # 新增导入
 
 if __name__ == '__main__':
     freeze_support()
@@ -107,12 +108,25 @@ if __name__ == '__main__':
     # 数值更稳定，每个类别可独立判断
     pos_rates = [0.06, 0.08, 0.02, 0.04, 0.04, 0.10, 0.06, 0.72]
     pos_weight = torch.tensor([1.0 / (r + 0.01) for r in pos_rates]).to(device)
-    # 使用计算出的类别权重
-    criterion = WeightedBCEWithLogitsLoss(
-        class_weights=class_weights,  # 使用计算出的类别权重
-        # pos_weight=pos_weight,      # 可以选择是否使用pos_weight
-        reduction='mean'
-    )
+
+    # 选择使用Focal Loss还是Weighted BCE
+    use_focal_loss = True  # 设置为True使用Focal Loss
+
+    if use_focal_loss:
+        # 使用Focal Loss
+        criterion = FocalLoss(
+            alpha=class_weights,  # 使用计算出的类别权重
+            gamma=2.0,  # 聚焦参数
+            reduction='mean'
+        )
+        print("使用 Focal Loss，gamma=2.0")
+    else:
+        # 使用计算出的类别权重
+        criterion = WeightedBCEWithLogitsLoss(
+            class_weights=class_weights,  # 使用计算出的类别权重
+            # pos_weight=pos_weight,      # 可以选择是否使用pos_weight
+            reduction='mean'
+        )
 
     # 优化器
     optimizer = torch.optim.AdamW(  # AdamW收敛快，准确率高，泛化性好
@@ -121,11 +135,25 @@ if __name__ == '__main__':
         weight_decay=config['weight_decay']
     )
 
+    # 添加学习率调度器
+    from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+    scheduler = ReduceLROnPlateau(
+        optimizer,
+        mode='max',  # 监控最大值（F1）
+        factor=0.5,  # 学习率衰减因子
+        patience=2,  # 2个epoch不提升则降低学习率
+        verbose=True,
+        min_lr=1e-7
+    )
+
     # 训练阶段
     best_val = 0
     global_step = 0
     best_accuracy = 0
     best_val_f1 = 0  # 记录最好的验证集F1
+    patience_counter = 0  # 早停计数器
+    early_stop_patience = 5  # 5个epoch不提升则停止
 
     writer = SummaryWriter('../logs')
     train_start_time = time.time()
@@ -226,11 +254,20 @@ if __name__ == '__main__':
         val_preds = (all_val_probs > 0.5).astype(int)
         val_f1 = f1_score(all_val_labels, val_preds, average='macro', zero_division=0)
 
+        # 计算每个类别的F1（用于监控）
+        per_class_f1 = f1_score(all_val_labels, val_preds, average=None, zero_division=0)
+        print(f"  各类别F1: {[f'{f1:.3f}' for f1 in per_class_f1]}")
+
+        # 计算少数类（2-6）的平均F1
+        minority_f1 = np.mean(per_class_f1[2:7])
+        print(f"  少数类平均F1: {minority_f1:.4f}")
+
         print(f"  验证集Macro F1: {val_f1:.4f}")
 
         # 用验证集F1保存模型
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
+            patience_counter = 0
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
@@ -239,9 +276,15 @@ if __name__ == '__main__':
                 'strict_accuracy': train_strict_accuracy,
                 'label_accuracy': train_label_accuracy,
                 'val_f1': val_f1,
+                'per_class_f1': per_class_f1,
                 'config': config
             }, os.path.join(config['save_dir'], 'best_model_by_val_f1.pth'))
             print(f"  保存验证集最佳模型！F1={val_f1:.4f}")
+        else:
+            patience_counter += 1
+
+        # 学习率调度（基于验证集F1）
+        scheduler.step(val_f1)
 
         # 原有的保存逻辑（用严格准确率）
         torch.save({
@@ -263,6 +306,11 @@ if __name__ == '__main__':
                 'accuracy': train_strict_accuracy,
                 'config': config
             }, os.path.join(config['save_dir'], 'best_model.pth'))
+
+        # 早停检查
+        if patience_counter >= early_stop_patience:
+            print(f"\n早停: {early_stop_patience}个epoch F1未提升")
+            break
 
     train_time = time.time() - train_start_time
     print(f"\n训练完成！总训练时间: {train_time / 60:.2f} 分钟")

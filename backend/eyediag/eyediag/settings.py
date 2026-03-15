@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,9 +38,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'rest_framework',
+    'corsheaders',
+    'diagnosis',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # 必须放在最前面
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -48,6 +53,16 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# CORS配置（允许Vue访问）- 只保留一个
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite默认端口
+    "http://127.0.0.1:5173",
+]
+
+# JWT配置
+JWT_SECRET = 'your-secret-key-change-this-in-production'
+JWT_EXPIRY_HOURS = 24
 
 ROOT_URLCONF = "eyediag.urls"
 
@@ -115,3 +130,18 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+# 媒体文件配置（用于上传的图片）
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'heatmaps')
+
+# 新增热力图配置
+HEATMAPS_URL = '/heatmaps/'
+HEATMAPS_ROOT = os.path.join(BASE_DIR, 'heatmaps')
+
+# REST Framework配置
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'diagnosis.authentication.JWTAuthentication',
+    ],
+}
