@@ -7,7 +7,7 @@ config = {
     'class_names': ['正常', '糖尿病视网膜病变', '青光眼', '白内障',
                    '黄斑变性', '高血压视网膜病变', '近视', '其他'],
     'batch_size': 16,
-    'epochs': 20,
+    'epochs': 25,
     'learning_rate': 1e-5,
     'weight_decay': 0.05,
     'warmup_steps': 500,

@@ -39,10 +39,10 @@ def strong_transform():
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.RandomVerticalFlip(p=0.3),  # 增加垂直翻转
         transforms.RandomRotation(30),  # 增大旋转角度
-        transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),  # 更强的颜色抖动
-        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.8, 1.2)),  # 仿射变换
-        transforms.RandomResizedCrop(size=(224, 224), scale=(0.7, 1.0)),  # 随机裁剪
-        transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0)),  # 高斯模糊
+        # transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),  # 更强的颜色抖动
+        # transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.8, 1.2)),  # 仿射变换
+        # transforms.RandomResizedCrop(size=(224, 224), scale=(0.7, 1.0)),  # 随机裁剪
+        # transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0)),  # 高斯模糊
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
